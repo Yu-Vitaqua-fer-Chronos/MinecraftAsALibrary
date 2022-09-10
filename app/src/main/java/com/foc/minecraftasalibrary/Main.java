@@ -7,17 +7,23 @@ import net.fabricmc.tinyremapper.NonClassCopyMode;
 import net.fabricmc.tinyremapper.OutputConsumerPath;
 import net.fabricmc.tinyremapper.TinyRemapper;
 import net.fabricmc.tinyremapper.TinyUtils;
+import net.lingala.zip4j.ZipFile;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.Scanner;
 
 public class Main {
@@ -25,9 +31,10 @@ public class Main {
     public static final String MappingsURL = "https://maven.quiltmc.org/repository/release/org/quiltmc/quilt-mappings/1.19.2+build.14/quilt-mappings-1.19.2+build.14-tiny.gz";
     public static final Path MappingsFile = Path.of(MCVersion+".mappings.tiny.gz");
     public static final Path serverJar = Path.of("minecraft."+MCVersion+".official.jar");
+    public static final Path unpackedJar = Path.of("minecraft."+MCVersion+".unpacked.jar");
     public static final Path remappedJar = Path.of("minecraft."+MCVersion+".remapped.jar");
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, ClassNotFoundException {
         if (!Files.exists(remappedJar)) {
             final JSONObject mcMeta = new JSONObject(readStringFromURL("https://launchermeta.mojang.com/mc/game/version_manifest.json"));
             final JSONArray mcVersions = mcMeta.getJSONArray("versions");
@@ -55,6 +62,26 @@ public class Main {
 
             downloadToFile(MappingsURL, MappingsFile.toString());
 
+            System.out.println("Flattening nested jars...");
+            System.out.println("  Extracting jar...");
+
+            Path bundleDir = Path.of(".minecraftBundle").toAbsolutePath();
+
+            new ZipFile(serverJar.toAbsolutePath().toString()).extractAll(bundleDir.toString());
+
+            String[] jars = Files.readString(Path.of(bundleDir.toString(), "META-INF/classpath-joined")).split(";");
+
+            System.out.println("  Extracted nested jars");
+            for (String jar: jars) {
+                Path path = Path.of(bundleDir.toString(), "META-INF", jar).toAbsolutePath();
+
+                new ZipFile(path.toString()).extractAll(".outputtedjars");
+            }
+
+            System.out.println("  Zipping extracted files into jar...");
+
+            new ZipFile(unpackedJar.toString()).addFiles(Arrays.asList(Objects.requireNonNull(new File(".outputtedjars").listFiles())));
+
             System.out.println("Remapping server jar...");
             Path[] classpath = new Path[0];
 
@@ -64,9 +91,9 @@ public class Main {
 
             try (OutputConsumerPath outputConsumer =
                          new OutputConsumerPath.Builder(remappedJar).build()) {
-                outputConsumer.addNonClassFiles(serverJar, NonClassCopyMode.FIX_META_INF, remapper);
+                outputConsumer.addNonClassFiles(unpackedJar, NonClassCopyMode.FIX_META_INF, remapper);
 
-                remapper.readInputs(serverJar);
+                remapper.readInputs(unpackedJar);
                 remapper.readClassPath(classpath);
 
                 remapper.apply(outputConsumer);
@@ -78,6 +105,10 @@ public class Main {
         } else {
             System.out.println("Found an existing remapped jar! If you want to redownload it, simply delete the file!");
         }
+
+        URLClassLoader clsloader = new URLClassLoader(new URL[] {remappedJar.toAbsolutePath().toUri().toURL()});
+
+        System.out.println(clsloader.loadClass("net.minecraft.item.ItemStack"));
     }
 
     public static String readStringFromURL(String requestURL) throws IOException {
