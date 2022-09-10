@@ -46,7 +46,7 @@ public class MinecraftTransformer {
     }
 
     public static void flattenMCJar(final Path officialJar, final Path outputJar) throws IOException {
-        Path bundleDir = Path.of(".minecraftBundle").toAbsolutePath();
+        Path bundleDir = Path.of(".temp/minecraftBundle").toAbsolutePath();
 
         new ZipFile(officialJar.toAbsolutePath().toString()).extractAll(bundleDir.toString());
 
@@ -56,12 +56,12 @@ public class MinecraftTransformer {
         for (String jar : jars) {
             Path path = Path.of(bundleDir.toString(), "META-INF", jar).toAbsolutePath();
 
-            new ZipFile(path.toString()).extractAll(".outputtedjars");
+            new ZipFile(path.toString()).extractAll(".temp/outputtedjars");
         }
 
 
         // NOTE: This jar isn't runnable, it's only made so it can be loaded by a classloader.
-        new ZipFile(outputJar.toString()).addFiles(Arrays.asList(Objects.requireNonNull(new File(".outputtedjars").listFiles())));
+        new ZipFile(outputJar.toString()).addFiles(Arrays.asList(Objects.requireNonNull(new File(".temp/outputtedjars").listFiles())));
     }
 
     public static void remapMinecraftJar(final Path mappings, final Path unpackedJar, final Path outputJar) {

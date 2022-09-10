@@ -5,7 +5,5 @@
 build
 
 # Other stuff cuz i don't wanna get attacked by MS
-*.mappings.tiny.gz
 minecraft.*.*.jar
-.outputtedjars
-.minecraftBundle
+.temp

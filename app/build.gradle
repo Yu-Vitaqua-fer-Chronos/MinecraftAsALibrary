@@ -45,3 +45,7 @@ jar {
         )
     }
 }
+
+artifacts {
+    archives shadowJar
+}

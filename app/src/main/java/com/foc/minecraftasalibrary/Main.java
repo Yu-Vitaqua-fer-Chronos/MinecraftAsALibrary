@@ -11,9 +11,9 @@ import java.nio.file.Path;
 public class Main {
     public static final String MCVersion = "1.19.2";
     public static final String MappingsURL = "https://maven.quiltmc.org/repository/release/org/quiltmc/quilt-mappings/1.19.2+build.14/quilt-mappings-1.19.2+build.14-tiny.gz";
-    public static final Path MappingsFile = Path.of(MCVersion+".mappings.tiny.gz");
-    public static final Path officialJar = Path.of("minecraft."+MCVersion+".official.jar");
-    public static final Path unpackedJar = Path.of("minecraft."+MCVersion+".unpacked.jar");
+    public static final Path MappingsFile = Path.of(".temp/"+MCVersion+".mappings.tiny.gz");
+    public static final Path officialJar = Path.of(".temp/minecraft."+MCVersion+".official.jar");
+    public static final Path unpackedJar = Path.of(".temp/minecraft."+MCVersion+".unpacked.jar");
     public static final Path remappedJar = Path.of("minecraft."+MCVersion+".remapped.jar");
 
     public static void main(String[] args) throws IOException, ClassNotFoundException {
@@ -37,7 +37,7 @@ public class Main {
             System.out.println("The remapped Minecraft server jar is already present! Delete it and relating files to redownload it!");
         }
 
-        URLClassLoader clsloader = MinecraftTransformer.createClassLoader(remappedJar);
+        URLClassLoader clsloader = MinecraftTransformer.createClassLoader(remappedJar, ClassLoader.getSystemClassLoader());
 
         Class ItemStack = clsloader.loadClass("net.minecraft.item.ItemStack");
 
