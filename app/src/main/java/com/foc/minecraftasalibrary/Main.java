@@ -3,125 +3,44 @@
  */
 package com.foc.minecraftasalibrary;
 
-import net.fabricmc.tinyremapper.NonClassCopyMode;
-import net.fabricmc.tinyremapper.OutputConsumerPath;
-import net.fabricmc.tinyremapper.TinyRemapper;
-import net.fabricmc.tinyremapper.TinyUtils;
-import net.lingala.zip4j.ZipFile;
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.Scanner;
 
 public class Main {
     public static final String MCVersion = "1.19.2";
     public static final String MappingsURL = "https://maven.quiltmc.org/repository/release/org/quiltmc/quilt-mappings/1.19.2+build.14/quilt-mappings-1.19.2+build.14-tiny.gz";
     public static final Path MappingsFile = Path.of(MCVersion+".mappings.tiny.gz");
-    public static final Path serverJar = Path.of("minecraft."+MCVersion+".official.jar");
+    public static final Path officialJar = Path.of("minecraft."+MCVersion+".official.jar");
     public static final Path unpackedJar = Path.of("minecraft."+MCVersion+".unpacked.jar");
     public static final Path remappedJar = Path.of("minecraft."+MCVersion+".remapped.jar");
 
     public static void main(String[] args) throws IOException, ClassNotFoundException {
+        System.out.println("Checking if remapped jar exists...");
+
         if (!Files.exists(remappedJar)) {
-            final JSONObject mcMeta = new JSONObject(readStringFromURL("https://launchermeta.mojang.com/mc/game/version_manifest.json"));
-            final JSONArray mcVersions = mcMeta.getJSONArray("versions");
+            System.out.println("Downloading official Minecraft jar...");
+            MinecraftTransformer.downloadMinecraft(MCVersion, officialJar);
 
-            String MCURl = null;
+            System.out.println("Downloading mappings file from Quilt...");
+            MinecraftTransformer.downloadMappings(MappingsURL, MappingsFile);
 
-            for (int i = 0; i < mcVersions.length(); i++) {
-                JSONObject version = mcVersions.getJSONObject(i);
-                if (version.getString("id").equals(MCVersion)) {
-                    JSONObject data = new JSONObject(readStringFromURL(version.getString("url")));
-                    MCURl = data.getJSONObject("downloads").getJSONObject("server").getString("url");
-                    break;
-                }
-            }
+            System.out.println("Flattening the Minecraft server jar...");
+            MinecraftTransformer.flattenMCJar(officialJar, unpackedJar);
 
-            if (MCURl == null) {
-                throw new RuntimeException("The MC version you requested isn't here!");
-            }
+            System.out.println("Remap the Minecraft server jar to use Quilt mappings...");
+            MinecraftTransformer.remapMinecraftJar(MappingsFile, unpackedJar, remappedJar);
 
-            System.out.println("Downloading the official Minecraft server jar...");
-
-            downloadToFile(MCURl, serverJar.toString());
-
-            System.out.println("Downloading the QuiltMC mappings...");
-
-            downloadToFile(MappingsURL, MappingsFile.toString());
-
-            System.out.println("Flattening nested jars...");
-            System.out.println("  Extracting jar...");
-
-            Path bundleDir = Path.of(".minecraftBundle").toAbsolutePath();
-
-            new ZipFile(serverJar.toAbsolutePath().toString()).extractAll(bundleDir.toString());
-
-            String[] jars = Files.readString(Path.of(bundleDir.toString(), "META-INF/classpath-joined")).split(";");
-
-            System.out.println("  Extracted nested jars");
-            for (String jar: jars) {
-                Path path = Path.of(bundleDir.toString(), "META-INF", jar).toAbsolutePath();
-
-                new ZipFile(path.toString()).extractAll(".outputtedjars");
-            }
-
-            System.out.println("  Zipping extracted files into jar...");
-
-            new ZipFile(unpackedJar.toString()).addFiles(Arrays.asList(Objects.requireNonNull(new File(".outputtedjars").listFiles())));
-
-            System.out.println("Remapping server jar...");
-            Path[] classpath = new Path[0];
-
-            TinyRemapper remapper = TinyRemapper.newRemapper()
-                    .withMappings(TinyUtils.createTinyMappingProvider(MappingsFile, "official", "named"))
-                    .build();
-
-            try (OutputConsumerPath outputConsumer =
-                         new OutputConsumerPath.Builder(remappedJar).build()) {
-                outputConsumer.addNonClassFiles(unpackedJar, NonClassCopyMode.FIX_META_INF, remapper);
-
-                remapper.readInputs(unpackedJar);
-                remapper.readClassPath(classpath);
-
-                remapper.apply(outputConsumer);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            } finally {
-                remapper.finish();
-            }
+            System.out.println("Finished all tasks.");
         } else {
-            System.out.println("Found an existing remapped jar! If you want to redownload it, simply delete the file!");
+            System.out.println("The remapped Minecraft server jar is already present! Delete it and relating files to redownload it!");
         }
 
-        URLClassLoader clsloader = new URLClassLoader(new URL[] {remappedJar.toAbsolutePath().toUri().toURL()});
+        URLClassLoader clsloader = MinecraftTransformer.createClassLoader(remappedJar);
 
-        System.out.println(clsloader.loadClass("net.minecraft.item.ItemStack"));
-    }
+        Class ItemStack = clsloader.loadClass("net.minecraft.item.ItemStack");
 
-    public static String readStringFromURL(String requestURL) throws IOException {
-        try (Scanner scanner = new Scanner(new URL(requestURL).openStream(),
-                StandardCharsets.UTF_8)) {
-            scanner.useDelimiter("\\A");
-            return scanner.hasNext() ? scanner.next() : "";
-        }
-    }
-
-    static long downloadToFile(String url, String fileName) throws IOException {
-        try (InputStream in = URI.create(url).toURL().openStream()) {
-            return Files.copy(in, Paths.get(fileName));
-        }
+        System.out.println(ItemStack);
     }
 }
