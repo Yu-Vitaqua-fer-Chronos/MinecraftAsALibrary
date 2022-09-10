@@ -89,4 +89,9 @@ public class MinecraftTransformer {
     public static URLClassLoader createClassLoader(final Path remappedJar) throws MalformedURLException {
         return (new URLClassLoader(new URL[] {remappedJar.toAbsolutePath().toUri().toURL()}));
     }
+
+    // Allows you to use a custom parent classloader
+    public static URLClassLoader createClassLoader(final Path remappedJar, ClassLoader parentClassloader) throws MalformedURLException {
+        return new URLClassLoader(new URL[] {remappedJar.toAbsolutePath().toUri().toURL()}, parentClassloader);
+    }
 }
