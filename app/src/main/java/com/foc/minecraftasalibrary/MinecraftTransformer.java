@@ -85,25 +85,45 @@ public class MinecraftTransformer {
         }
     }
 
+    public static URLClassLoader createClassLoader(final Path remappedJar) throws MalformedURLException {
+        ArrayList<URL> urls = new ArrayList<>();
+
+        urls.add(remappedJar.toAbsolutePath().toUri().toURL());
+
+        URL[] urlArray = urls.toArray(new URL[0]);
+
+        return new URLClassLoader(urlArray);
+    }
+
     public static URLClassLoader createClassLoader(final Path remappedJar, URL... otherUrls) throws MalformedURLException {
         ArrayList<URL> urls = new ArrayList<>();
 
         urls.add(remappedJar.toAbsolutePath().toUri().toURL());
         urls.addAll(List.of(otherUrls));
 
-        URL[] urlArray = (URL[]) urls.toArray();
+        URL[] urlArray = urls.toArray(new URL[0]);
 
         return new URLClassLoader(urlArray);
     }
 
     // Allows you to use a custom parent classloader
+    public static URLClassLoader createClassLoader(final Path remappedJar, ClassLoader parentClassloader) throws MalformedURLException {
+        ArrayList<URL> urls = new ArrayList<URL>();
+
+        urls.add(remappedJar.toAbsolutePath().toUri().toURL());
+
+        URL[] urlArray = urls.toArray(new URL[0]);
+
+        return new URLClassLoader(urlArray);
+    }
+
     public static URLClassLoader createClassLoader(final Path remappedJar, ClassLoader parentClassloader, URL... otherUrls) throws MalformedURLException {
         ArrayList<URL> urls = new ArrayList<URL>();
 
         urls.add(remappedJar.toAbsolutePath().toUri().toURL());
         urls.addAll(List.of(otherUrls));
 
-        URL[] urlArray = (URL[]) urls.toArray();
+        URL[] urlArray = urls.toArray(new URL[0]);
 
         return new URLClassLoader(urlArray);
     }
