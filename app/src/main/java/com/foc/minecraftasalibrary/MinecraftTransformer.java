@@ -15,8 +15,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Objects;
+import java.util.*;
 
 public class MinecraftTransformer {
     public static void downloadMinecraft(final String mcVersion, final Path downloadPath) throws IOException {
@@ -86,12 +85,26 @@ public class MinecraftTransformer {
         }
     }
 
-    public static URLClassLoader createClassLoader(final Path remappedJar) throws MalformedURLException {
-        return (new URLClassLoader(new URL[] {remappedJar.toAbsolutePath().toUri().toURL()}));
+    public static URLClassLoader createClassLoader(final Path remappedJar, URL... otherUrls) throws MalformedURLException {
+        ArrayList<URL> urls = new ArrayList<>();
+
+        urls.add(remappedJar.toAbsolutePath().toUri().toURL());
+        urls.addAll(List.of(otherUrls));
+
+        URL[] urlArray = (URL[]) urls.toArray();
+
+        return new URLClassLoader(urlArray);
     }
 
     // Allows you to use a custom parent classloader
-    public static URLClassLoader createClassLoader(final Path remappedJar, ClassLoader parentClassloader) throws MalformedURLException {
-        return new URLClassLoader(new URL[] {remappedJar.toAbsolutePath().toUri().toURL()}, parentClassloader);
+    public static URLClassLoader createClassLoader(final Path remappedJar, ClassLoader parentClassloader, URL... otherUrls) throws MalformedURLException {
+        ArrayList<URL> urls = new ArrayList<URL>();
+
+        urls.add(remappedJar.toAbsolutePath().toUri().toURL());
+        urls.addAll(List.of(otherUrls));
+
+        URL[] urlArray = (URL[]) urls.toArray();
+
+        return new URLClassLoader(urlArray);
     }
 }
