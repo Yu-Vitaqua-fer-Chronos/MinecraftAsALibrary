@@ -82,13 +82,10 @@ class MinecraftTransformer {
         depsZip.close();
     }
 
-    public static URLClassLoader createClassLoader(URL... otherUrls) {
-        return new URLClassLoader(otherUrls);
-    }
-
     // Allows you to use a custom parent classloader
 
-    public static URLClassLoader createClassLoader(ClassLoader parentClassloader, URL... otherUrls) throws MalformedURLException {
-        return new URLClassLoader(Arrays.copyOf(otherUrls, otherUrls.length), parentClassloader);
+    public static ClassLoader createClassLoader(ClassLoader parentClassloader, URL... otherUrls) throws MalformedURLException {
+        URLClassLoader cls = new URLClassLoader(Arrays.copyOf(otherUrls, otherUrls.length), parentClassloader);
+        return new PublicMutatingClassLoader(cls);
     }
 }
