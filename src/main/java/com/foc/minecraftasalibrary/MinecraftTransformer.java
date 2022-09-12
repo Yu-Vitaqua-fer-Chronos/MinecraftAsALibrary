@@ -18,7 +18,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 
-public class MinecraftTransformer {
+class MinecraftTransformer {
     public static void downloadMinecraft(final String mcVersion, final Path downloadPath) throws IOException {
         final JSONObject mcMeta = new JSONObject(Utils.readStringFromURL("https://launchermeta.mojang.com/mc/game/version_manifest.json"));
         final JSONArray mcVersions = mcMeta.getJSONArray("versions");
@@ -45,6 +45,7 @@ public class MinecraftTransformer {
         Utils.downloadToFile(mappingsUrl, mappingsFile.toString());
     }
 
+    @SuppressWarnings("resource")
     public static void flattenAndRemapJar(final Path officialJar, final Path mappings, final Path depsJar, final Path remappedJar) throws IOException {
         Path bundleDir = Path.of(".temp/minecraftBundle").toAbsolutePath();
 
@@ -66,8 +67,6 @@ public class MinecraftTransformer {
 
             if (!path.equals(serverJar)) {
                 new ZipFile(path.toString()).extractAll(".temp/outputtedjars");
-            } else {
-                continue;
             }
         }
 
@@ -75,25 +74,13 @@ public class MinecraftTransformer {
         new ZipFile(depsJar.toString()).addFiles(Arrays.asList(Objects.requireNonNull(new File(".temp/outputtedjars").listFiles())));
     }
 
-    public static URLClassLoader createClassLoader(URL... otherUrls) throws MalformedURLException {
-        ArrayList<URL> urls = new ArrayList<>();
-
-        urls.addAll(List.of(otherUrls));
-
-        URL[] urlArray = urls.toArray(new URL[0]);
-
-        return new URLClassLoader(urlArray);
+    public static URLClassLoader createClassLoader(URL... otherUrls) {
+        return new URLClassLoader(otherUrls);
     }
 
     // Allows you to use a custom parent classloader
 
     public static URLClassLoader createClassLoader(ClassLoader parentClassloader, URL... otherUrls) throws MalformedURLException {
-        ArrayList<URL> urls = new ArrayList<URL>();
-
-        urls.addAll(List.of(otherUrls));
-
-        URL[] urlArray = urls.toArray(new URL[0]);
-
-        return new URLClassLoader(urlArray);
+        return new URLClassLoader(Arrays.copyOf(otherUrls, otherUrls.length), parentClassloader);
     }
 }

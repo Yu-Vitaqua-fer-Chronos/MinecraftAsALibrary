@@ -35,6 +35,9 @@ dependencies {
 
     implementation 'net.fabricmc:tiny-mappings-parser:0.3.0+build.17'
     implementation 'net.fabricmc:tiny-remapper:0.8.6'
+
+    compileOnly files("minecraft.1.19.2.remapped.jar")
+    compileOnly files("minecraft.1.19.2.deps.jar")
 }
 
 

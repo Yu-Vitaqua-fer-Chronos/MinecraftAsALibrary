@@ -15,7 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Scanner;
 
-public class Utils {
+class Utils {
     public static void remapMinecraftServerJar(final Path mappings, final Path serverJar, final Path outputJar) {
         Path[] classpath = new Path[0];
 
