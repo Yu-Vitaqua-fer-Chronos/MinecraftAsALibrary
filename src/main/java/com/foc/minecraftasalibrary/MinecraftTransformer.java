@@ -71,7 +71,15 @@ class MinecraftTransformer {
         }
 
         // NOTE: This jar isn't runnable, it's sole purpose is to make it loadable by a classloader.
-        new ZipFile(depsJar.toString()).addFiles(Arrays.asList(Objects.requireNonNull(new File(".temp/outputtedjars").listFiles())));
+        ZipFile depsZip = new ZipFile(depsJar.toAbsolutePath().toString());
+        for (File file : Objects.requireNonNull(new File(".temp/outputtedjars").listFiles())) {
+            if (file.isFile()) {
+                depsZip.addFile(file);
+            } else if (file.isDirectory()) {
+                depsZip.addFolder(file);
+            }
+        }
+        depsZip.close();
     }
 
     public static URLClassLoader createClassLoader(URL... otherUrls) {
