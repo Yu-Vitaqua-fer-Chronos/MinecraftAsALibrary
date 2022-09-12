@@ -7,3 +7,4 @@ build
 # Other stuff cuz i don't wanna get attacked by MS
 minecraft.*.*.jar
 .temp
+.*
