@@ -10,17 +10,16 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.Enumeration;
-import java.util.Vector;
 
-public class PublicMutatingClassLoader extends ClassLoader {
-
+public class RemappingClassLoader extends ClassLoader {
     private final ClassLoader root;
 
-    public PublicMutatingClassLoader(ClassLoader root) {
+    public RemappingClassLoader(ClassLoader root) {
         super(root);
         this.root = root;
     }
 
+    /*
     protected Class<?> findClass(String name) throws ClassNotFoundException {
         // It would be easier to call the loadClass() methods of the delegateClassLoaders
         // here, but we have to load the class from the byte code ourselves, because we
@@ -39,14 +38,13 @@ public class PublicMutatingClassLoader extends ClassLoader {
         Class<?> clazz = defineClass(name, byteCode, null);
         // Set every access to public
         try {
-            makePublic(clazz);
+            return makePublic(clazz);
         } catch (NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
-        return clazz;
     }
 
-    private void makePublic(Class<?> clazz) throws NoSuchMethodException {
+    private Class<?> makePublic(Class<?> clazz) throws NoSuchMethodException {
         // Constructors
         clazz.getDeclaredConstructor().setAccessible(true);
         for (Constructor<?> constructor : clazz.getDeclaredConstructors()) {
@@ -85,6 +83,7 @@ public class PublicMutatingClassLoader extends ClassLoader {
         for (Annotation annotation : clazz.getAnnotations()) {
             makePublic(annotation.annotationType());
         }
+        return clazz;
     }
 
     private ByteBuffer loadResource(URL url) throws IOException {
@@ -122,4 +121,5 @@ public class PublicMutatingClassLoader extends ClassLoader {
         return root.getResources(name);
     }
 
+    */
 }

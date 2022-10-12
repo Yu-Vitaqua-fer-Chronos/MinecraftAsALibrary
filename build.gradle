@@ -38,6 +38,18 @@ dependencies {
 }
 
 
+///*
+// Test file, shouldn't be in actual builds
+sourceSets {
+    main {
+        java {
+            srcDir 'src'
+            exclude 'src/main/java/com/foc/minecraftasalibrary/Main.java'
+        }
+    }
+}
+
+
 jar {
     manifest {
         attributes(
@@ -45,6 +57,8 @@ jar {
         )
     }
 }
+// */
+
 
 artifacts {
     archives shadowJar

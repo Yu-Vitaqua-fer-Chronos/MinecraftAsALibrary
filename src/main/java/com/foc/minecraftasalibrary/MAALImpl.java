@@ -11,7 +11,7 @@ import java.util.logging.Logger;
 final class MAALImpl implements MAAL {
 
     // TODO: Remove hardcoded file url
-    public static final String MappingsURL = "https://maven.quiltmc.org/repository/release/org/quiltmc/quilt-mappings/1.19.2+build.14/quilt-mappings-1.19.2+build.14-tiny.gz";
+    public static final String MappingsURL = "https://maven.quiltmc.org/repository/release/org/quiltmc/quilt-mappings/1.19.2+build.19/quilt-mappings-1.19.2+build.19-tiny.gz";
     @Override
     public ClassLoader generateVanillaClassLoader(MinecraftVersion version) {
         if (!version.version().equals(MinecraftVersion.RELEASE_1_19_2.version())) {

@@ -1,5 +1,8 @@
 package com.foc.minecraftasalibrary;
 
+/* TODO: Add mapping URLs here maybe? Issue with Quilt not having mappings older than 1.18,
+ * But it shouldn't be an issue since we can fallback to Fabric mappings.
+ */
 public interface MinecraftVersion {
     String version();
 
